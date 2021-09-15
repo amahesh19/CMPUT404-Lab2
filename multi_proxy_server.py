@@ -22,13 +22,17 @@ def get_remote_ip(host):
 def handle_request(addr, conn, proxy_end):
     send_full_data = conn.recv(BUFFER_SIZE)
     print(f"Sending received data {send_full_data} to google")
-    
-    proxy_end.shutdown(socket.SHUT_RDWR)
+    proxy_end.sendall(send_full_data)
+    proxy_end.shutdown(socket.SHUT_WR)
     
     data = proxy_end.recv(BUFFER_SIZE)
+
     print(f"Sending received data {data} to client")
     conn.send(data)
-    
+    conn.shutdown(socket.SHUT_RDWR)
+
+    conn.close()
+
 def main():
     extern_host = 'www.google.com'
     port = 80
@@ -40,7 +44,7 @@ def main():
         #bind socket to address
         proxy_start.bind((HOST, PORT))
         #set to listening mode
-        proxy_start.listen(1) 
+        proxy_start.listen(2) 
         
         
         while True:
@@ -53,13 +57,10 @@ def main():
                 
                 proxy_end.connect((remote_ip, port))
                 
-                #continuously listen for connections
-                while True:
-                    # conn1, addr1 = proxy_start.accept()
-                    p = Process(target = handle_request, args = (addr, conn, proxy_end))
-                    p.daemon = True
-                    p.start()
-                    print("Started process", p)
+                p = Process(target = handle_request, args = (addr, conn, proxy_end))
+                p.daemon = True
+                p.start()
+                print("Started process", p)
                 
             conn.close()
 

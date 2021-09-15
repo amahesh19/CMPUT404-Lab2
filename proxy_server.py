@@ -45,6 +45,7 @@ def main():
                 #recieve data, wait a bit, then send it back
                 send_full_data = conn.recv(BUFFER_SIZE)
                 print(f"Sending received data {send_full_data} to google")
+                proxy_end.sendall(send_full_data)
                 
                 proxy_end.shutdown(socket.SHUT_WR)
                 
